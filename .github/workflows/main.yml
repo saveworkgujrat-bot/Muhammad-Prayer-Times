@@ -61,6 +61,11 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Register Widget in AndroidManifest
+        run: |
+          cd android/app/src/main
+          sed -i 's|</application>|    <receiver android:name="com.muhammadprayertimes.app.PrayerWidget" android:exported="true">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/prayer_widget_info" />\n        </receiver>\n    </application>|' AndroidManifest.xml
+
       - name: Fix Kotlin Version Conflict
         run: |
           cd android
