@@ -61,10 +61,25 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Copy Widget Files
+        run: |
+          mkdir -p android/app/src/main/res/xml
+          mkdir -p android/app/src/main/res/drawable
+          mkdir -p android/app/src/main/res/layout
+          mkdir -p android/app/src/main/java/com/muhammadprayertimes/app
+          cp android/app/src/main/res/xml/prayer_widget_info.xml android/app/src/main/res/xml/ 2>/dev/null || true
+          cp android/app/src/main/res/layout/prayer_widget_layout.xml android/app/src/main/res/layout/ 2>/dev/null || true
+          cp android/app/src/main/res/drawable/widget_background.xml android/app/src/main/res/drawable/ 2>/dev/null || true
+          cp android/app/src/main/java/com/muhammadprayertimes/app/PrayerWidget.kt android/app/src/main/java/com/muhammadprayertimes/app/ 2>/dev/null || true
+          echo "=== Widget files check ==="
+          ls android/app/src/main/res/xml/
+          ls android/app/src/main/res/layout/
+          ls android/app/src/main/res/drawable/
+          ls android/app/src/main/java/com/muhammadprayertimes/app/
+
       - name: Register Widget in AndroidManifest
         run: |
-          cd android/app/src/main
-          sed -i 's|</application>|    <receiver android:name="com.muhammadprayertimes.app.PrayerWidget" android:exported="true">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/prayer_widget_info" />\n        </receiver>\n    </application>|' AndroidManifest.xml
+          sed -i 's|</application>|    <receiver android:name="com.muhammadprayertimes.app.PrayerWidget" android:exported="true">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/prayer_widget_info" />\n        </receiver>\n    </application>|' android/app/src/main/AndroidManifest.xml
 
       - name: Fix Kotlin Version Conflict
         run: |
