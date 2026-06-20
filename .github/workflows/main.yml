@@ -64,16 +64,14 @@ jobs:
       - name: Fix Kotlin Version Conflict
         run: |
           cd android
-          cat >> build.gradle << 'GRADLE'
-
-configurations.all {
-    resolutionStrategy {
-        force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
-        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10'
-        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10'
-    }
-}
-GRADLE
+          echo "" >> build.gradle
+          echo "configurations.all {" >> build.gradle
+          echo "    resolutionStrategy {" >> build.gradle
+          echo "        force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'" >> build.gradle
+          echo "        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10'" >> build.gradle
+          echo "        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10'" >> build.gradle
+          echo "    }" >> build.gradle
+          echo "}" >> build.gradle
 
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
