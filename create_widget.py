@@ -5,16 +5,21 @@ os.makedirs("android/app/src/main/res/drawable", exist_ok=True)
 os.makedirs("android/app/src/main/res/layout", exist_ok=True)
 os.makedirs("android/app/src/main/java/com/muhammadprayertimes/app", exist_ok=True)
 
-# Widget Info XML
+# Widget Info XML - Android 15 compatible
 with open("android/app/src/main/res/xml/prayer_widget_info.xml", "w") as f:
     f.write('''<?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
     android:minHeight="110dp"
-    android:updatePeriodMillis="60000"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:maxResizeWidth="450dp"
+    android:maxResizeHeight="300dp"
+    android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/prayer_widget_layout"
     android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen">
+    android:widgetCategory="home_screen"
+    android:description="@string/app_name">
 </appwidget-provider>''')
 
 # Widget Background
@@ -128,6 +133,8 @@ class PrayerWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (id in appWidgetIds) updateAppWidget(context, appWidgetManager, id)
     }
+    override fun onEnabled(context: Context) { super.onEnabled(context) }
+    override fun onDisabled(context: Context) { super.onDisabled(context) }
     companion object {
         val PRAYERS = listOf(
             Triple("Fajr",    3 * 60 + 15,  "3:15 AM"),
@@ -148,7 +155,8 @@ class PrayerWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_prayer_time, nextPrayer.third)
             views.setTextViewText(R.id.widget_countdown, String.format("%02d:%02d:%02d", hh, mm, 60 - ss))
             views.setTextViewText(R.id.widget_location, "Gujrat")
-            val ids = listOf(Triple(R.id.fajr_name, R.id.fajr_time, PRAYERS[0]),
+            val ids = listOf(
+                Triple(R.id.fajr_name, R.id.fajr_time, PRAYERS[0]),
                 Triple(R.id.dhuhr_name, R.id.dhuhr_time, PRAYERS[1]),
                 Triple(R.id.asr_name, R.id.asr_time, PRAYERS[2]),
                 Triple(R.id.maghrib_name, R.id.maghrib_time, PRAYERS[3]),
