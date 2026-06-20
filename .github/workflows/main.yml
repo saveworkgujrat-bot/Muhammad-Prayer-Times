@@ -61,21 +61,119 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Copy Widget Files
+      - name: Create Widget Files
         run: |
           mkdir -p android/app/src/main/res/xml
           mkdir -p android/app/src/main/res/drawable
           mkdir -p android/app/src/main/res/layout
           mkdir -p android/app/src/main/java/com/muhammadprayertimes/app
-          cp android/app/src/main/res/xml/prayer_widget_info.xml android/app/src/main/res/xml/ 2>/dev/null || true
-          cp android/app/src/main/res/layout/prayer_widget_layout.xml android/app/src/main/res/layout/ 2>/dev/null || true
-          cp android/app/src/main/res/drawable/widget_background.xml android/app/src/main/res/drawable/ 2>/dev/null || true
-          cp android/app/src/main/java/com/muhammadprayertimes/app/PrayerWidget.kt android/app/src/main/java/com/muhammadprayertimes/app/ 2>/dev/null || true
-          echo "=== Widget files check ==="
-          ls android/app/src/main/res/xml/
-          ls android/app/src/main/res/layout/
-          ls android/app/src/main/res/drawable/
-          ls android/app/src/main/java/com/muhammadprayertimes/app/
+
+          cat > android/app/src/main/res/xml/prayer_widget_info.xml << 'XMLEOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="180dp"
+              android:minHeight="110dp"
+              android:updatePeriodMillis="1800000"
+              android:initialLayout="@layout/prayer_widget_layout"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen">
+          </appwidget-provider>
+          XMLEOF
+
+          cat > android/app/src/main/res/drawable/widget_background.xml << 'XMLEOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <solid android:color="#CC022C22" />
+              <corners android:radius="16dp" />
+              <stroke android:width="1dp" android:color="#2010B981" />
+          </shape>
+          XMLEOF
+
+          cat > android/app/src/main/res/layout/prayer_widget_layout.xml << 'XMLEOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:background="@drawable/widget_background"
+              android:padding="16dp"
+              android:gravity="center">
+              <TextView
+                  android:id="@+id/widget_label"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="Next Prayer"
+                  android:textColor="#80FFFFFF"
+                  android:textSize="11sp" />
+              <TextView
+                  android:id="@+id/widget_prayer_name"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="Asr"
+                  android:textColor="#FFFFFF"
+                  android:textSize="28sp"
+                  android:textStyle="bold"
+                  android:layout_marginTop="2dp" />
+              <TextView
+                  android:id="@+id/widget_prayer_time"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="3:45 PM"
+                  android:textColor="#10B981"
+                  android:textSize="18sp"
+                  android:layout_marginTop="2dp" />
+              <TextView
+                  android:id="@+id/widget_countdown"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="in 1h 23m"
+                  android:textColor="#80FFFFFF"
+                  android:textSize="13sp"
+                  android:layout_marginTop="4dp" />
+          </LinearLayout>
+          XMLEOF
+
+          cat > android/app/src/main/java/com/muhammadprayertimes/app/PrayerWidget.kt << 'KTEOF'
+          package com.muhammadprayertimes.app
+
+          import android.appwidget.AppWidgetManager
+          import android.appwidget.AppWidgetProvider
+          import android.content.Context
+          import android.widget.RemoteViews
+          import java.util.Calendar
+
+          class PrayerWidget : AppWidgetProvider() {
+              override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+                  for (appWidgetId in appWidgetIds) {
+                      updateAppWidget(context, appWidgetManager, appWidgetId)
+                  }
+              }
+              companion object {
+                  fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+                      val views = RemoteViews(context.packageName, R.layout.prayer_widget_layout)
+                      val cal = Calendar.getInstance()
+                      val currentMinutes = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+                      val prayers = listOf(Pair("Fajr", 300), Pair("Dhuhr", 750), Pair("Asr", 945), Pair("Maghrib", 1110), Pair("Isha", 1200))
+                      var nextPrayer = prayers[0]
+                      var minDiff = Int.MAX_VALUE
+                      for (prayer in prayers) {
+                          val diff = prayer.second - currentMinutes
+                          if (diff > 0 && diff < minDiff) { minDiff = diff; nextPrayer = prayer }
+                      }
+                      if (minDiff == Int.MAX_VALUE) { nextPrayer = prayers[0]; minDiff = (1440 - currentMinutes) + prayers[0].second }
+                      val h = nextPrayer.second / 60
+                      val m = nextPrayer.second % 60
+                      val ampm = if (h < 12) "AM" else "PM"
+                      val dh = if (h > 12) h - 12 else if (h == 0) 12 else h
+                      views.setTextViewText(R.id.widget_prayer_name, nextPrayer.first)
+                      views.setTextViewText(R.id.widget_prayer_time, String.format("%d:%02d %s", dh, m, ampm))
+                      views.setTextViewText(R.id.widget_countdown, String.format("in %dh %02dm", minDiff/60, minDiff%60))
+                      appWidgetManager.updateAppWidget(appWidgetId, views)
+                  }
+              }
+          }
+          KTEOF
 
       - name: Register Widget in AndroidManifest
         run: |
