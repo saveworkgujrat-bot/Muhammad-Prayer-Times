@@ -1,0 +1,6 @@
+{
+  "name": "Muslim Prayer Times",
+  "description": "A beautiful prayer times tracker with live remaining countdown, Hijri/Gregorian date formatting, and customizable audio alerts.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
