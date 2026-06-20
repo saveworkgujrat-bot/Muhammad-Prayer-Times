@@ -19,7 +19,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       # 3. Java setup (Android ke liye zaruri)
       - name: Setup Java JDK
@@ -32,9 +31,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # 5. Dependencies install
+      # 5. Dependencies install (npm install use karo, npm ci nahi)
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       # 6. .env file banana (Gemini API key ke liye)
       - name: Create .env file
