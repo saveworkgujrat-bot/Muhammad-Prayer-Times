@@ -21,7 +21,7 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Setup Android SDK
@@ -30,8 +30,6 @@ jobs:
       - name: Fix Project Structure
         run: |
           mkdir -p src/components src/utils
-          
-          # Root mein jo files hain unhe src/ mein move karo
           [ -f App.tsx ] && mv App.tsx src/
           [ -f main.tsx ] && mv main.tsx src/
           [ -f index.css ] && mv index.css src/
@@ -39,7 +37,6 @@ jobs:
           [ -f SettingsModal.tsx ] && mv SettingsModal.tsx src/components/
           [ -f audioSynth.ts ] && mv audioSynth.ts src/utils/
           [ -f prayerCalc.ts ] && mv prayerCalc.ts src/utils/
-          
           echo "=== Project Structure ==="
           find . -not -path './node_modules/*' -not -path './.git/*' | head -40
 
