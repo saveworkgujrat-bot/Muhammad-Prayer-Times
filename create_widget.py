@@ -5,7 +5,7 @@ os.makedirs("android/app/src/main/res/drawable", exist_ok=True)
 os.makedirs("android/app/src/main/res/layout", exist_ok=True)
 os.makedirs("android/app/src/main/java/com/muhammadprayertimes/app", exist_ok=True)
 
-# Widget Info XML - Android 15 compatible
+# Widget Info XML - with previewLayout for Android 12+
 with open("android/app/src/main/res/xml/prayer_widget_info.xml", "w") as f:
     f.write('''<?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
@@ -13,13 +13,11 @@ with open("android/app/src/main/res/xml/prayer_widget_info.xml", "w") as f:
     android:minHeight="110dp"
     android:targetCellWidth="4"
     android:targetCellHeight="2"
-    android:maxResizeWidth="450dp"
-    android:maxResizeHeight="300dp"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/prayer_widget_layout"
+    android:previewLayout="@layout/prayer_widget_layout"
     android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen"
-    android:description="@string/app_name">
+    android:widgetCategory="home_screen">
 </appwidget-provider>''')
 
 # Widget Background
@@ -133,8 +131,6 @@ class PrayerWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (id in appWidgetIds) updateAppWidget(context, appWidgetManager, id)
     }
-    override fun onEnabled(context: Context) { super.onEnabled(context) }
-    override fun onDisabled(context: Context) { super.onDisabled(context) }
     companion object {
         val PRAYERS = listOf(
             Triple("Fajr",    3 * 60 + 15,  "3:15 AM"),
@@ -150,10 +146,10 @@ class PrayerWidget : AppWidgetProvider() {
             var nextPrayer = PRAYERS[0]; var minDiff = Int.MAX_VALUE
             for (p in PRAYERS) { val diff = p.second - now; if (diff > 0 && diff < minDiff) { minDiff = diff; nextPrayer = p } }
             if (minDiff == Int.MAX_VALUE) { nextPrayer = PRAYERS[0]; minDiff = 1440 - now + PRAYERS[0].second }
-            val hh = minDiff / 60; val mm = minDiff % 60; val ss = cal.get(Calendar.SECOND)
+            val hh = minDiff / 60; val mm = minDiff % 60
             views.setTextViewText(R.id.widget_prayer_name, nextPrayer.first)
             views.setTextViewText(R.id.widget_prayer_time, nextPrayer.third)
-            views.setTextViewText(R.id.widget_countdown, String.format("%02d:%02d:%02d", hh, mm, 60 - ss))
+            views.setTextViewText(R.id.widget_countdown, String.format("%02d:%02d", hh, mm))
             views.setTextViewText(R.id.widget_location, "Gujrat")
             val ids = listOf(
                 Triple(R.id.fajr_name, R.id.fajr_time, PRAYERS[0]),
