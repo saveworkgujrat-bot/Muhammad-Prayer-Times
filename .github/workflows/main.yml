@@ -10,34 +10,74 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      # 1. Code checkout
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Unzip Project Files
-      run: unzip muhammad-prayer-times.zip -d extracted_project
+      # 2. Node.js setup
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+      # 3. Java setup (Android ke liye zaruri)
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    - name: Build APK with Gradle
-      run: |
-        if [ -d "extracted_project/android" ]; then
-          cd extracted_project/android
-        elif [ -d "android" ]; then
+      # 4. Android SDK setup
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 5. Dependencies install
+      - name: Install Dependencies
+        run: npm ci
+
+      # 6. .env file banana (Gemini API key ke liye)
+      - name: Create .env file
+        run: |
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env
+          echo "APP_URL=http://localhost" >> .env
+
+      # 7. Web app build karo
+      - name: Build Web App
+        run: npm run build
+
+      # 8. Capacitor install karo
+      - name: Install Capacitor
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      # 9. Capacitor initialize karo
+      - name: Initialize Capacitor
+        run: |
+          npx cap init "Muhammad Prayer Times" "com.muhammadprayertimes.app" --web-dir=dist
+
+      # 10. Android platform add karo
+      - name: Add Android Platform
+        run: npx cap add android
+
+      # 11. Web assets sync karo
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      # 12. Gradle permissions
+      - name: Make Gradlew Executable
+        run: chmod +x android/gradlew
+
+      # 13. APK build karo (debug)
+      - name: Build Debug APK
+        run: |
           cd android
-        else
-          echo "Android folder not found!" && exit 1
-        fi
-        chmod +x ./gradlew
-        ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: prayer-times-apk
-        path: |
-          extracted_project/android/app/build/outputs/apk/debug/app-debug.apk
-          android/app/build/outputs/apk/debug/app-debug.apk
+      # 14. APK artifact upload karo (download ke liye)
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: muhammad-prayer-times-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
